@@ -4,7 +4,7 @@
 
 2. 远程仓库
 
-首先登录Github.com，create new repository，注意创建新项目时，全部按默认，只填写 项目 *名称* 和 *简介* ，不勾选README.md，License、Ignore；
+首先登录Github.com，create new repository，注意创建新项目时，全部按默认，只填写 项目 `名称` 和 `简介` ，不勾选README.md，License、Ignore；
 
 初始化项目完成后，页面会有展示3种构建项目内容的方式；
 
