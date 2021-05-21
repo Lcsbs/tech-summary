@@ -66,12 +66,47 @@ Antlr定义SQL的语法规则，完成SQL词法，语法解析，将SQL转化为
 
 Hive的性能优化，参考：https://cloud.tencent.com/developer/article/1453464
 
-- 列裁剪和分区裁剪，查询时指定列和分区
-- 使用Sort by代替 order by
-- 使用group by代替distinct
-- 开启严格模式
-- 采取合适的存储格式
-- MapReduce优化
-- 优化SQL处理数据倾斜
-- 本地模式与开启并行执行
+- 列裁剪和分区裁剪，查询时指定列和分区，全表扫描数据效率低；
+- 提前执行where逻辑，减少下游的数据量；
+- 使用Sort by代替 order by；order by会全局数据排序，map端数据全部到reduce端，数据量大时长时间执行不完。使用sort by在每个分区内排序，视情况会启动多个reducer，每个reducer内有序；
+- 使用group by代替distinct；当需要统计某一行的去重，使用count(distinct)可以用group by来代替，count(distinct)会产生较少的reducer；
+- join基础优化
 
+1. 小表前置，hive在解析带有join的语句时，会尝试将最后的表加载到内存中。如果表太大会导致oom；
+2. 多表join时key相同，会将多个join合并为一个MapReduce任务来执行；
+3. 利用map join特性，特别适合大小表join的情况。hive在map端完成join操作，节省了reduce端，提高效率；
+
+- 优化SQL处理join数据倾斜
+
+1. 对于空值如果不需要就提前用where条件过滤掉，如果需要则用随机数的方式打散；
+
+- MapReduce优化
+
+1. 调整合理的mapper数，一般如果mapper输入是少量大文件就减少mapper数，如果输入是大量非小文件就增加mapper数；
+2. 设置合理的reducer数，通过mapred.reduce.tasks参数来配置；
+
+- 合并小文件
+
+1. 输入端合并小文件；需要改变hive文件的输入，通过hive.input.format参数改为CombineInputFormat；
+2. 输出端合并小文件；直接将hive.merge.file和hive.merged.file设置为true；
+
+- 启用压缩
+
+压缩中间结果和输出结果。使用snnapy压缩；
+
+- JVM重用
+
+在MapReduce中，一个task就会启动一个JVM，如果JVM启动时间过长，而且task数量多的话，性能消耗很大。可以配置mapred.job.reuse.jvm.num.tasks数量，来复用JVM；
+
+- 并行执行与本地模式
+- 开启严格模式
+
+严格模式就是不允许用户执行3中有风险的语句；
+
+1. 查询分区表时未指定分区列
+2. 两表join会产生笛卡儿积
+3. 用order by为限制limit条件的
+
+- 采用合适的存储格式
+
+创建表时指定stored as，一般用parquet和text file较多
