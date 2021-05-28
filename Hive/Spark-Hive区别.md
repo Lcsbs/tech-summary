@@ -22,6 +22,8 @@ https://book.itheima.net/
 
 1. 消除了冗余的HDFS读写
 
+hadoop每次shuffle必须把文件写入磁盘，spark可以将数据cache到内存中；
+
 1. 消除了MapReduce阶段，提供丰富的算子，reduce阶段可以cache到内存；
 2. JVM的优化；MapReduce是基于进程的，启动一个task就会启动一个jvm；spark是在Excutor中启动一次JVM，每个task启动线程，并在线程池中复用；减少启动花费时间；
 
